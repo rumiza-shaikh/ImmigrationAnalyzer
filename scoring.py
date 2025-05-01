@@ -1,6 +1,5 @@
 def score_eligibility(responses):
     score_map = {"Yes": 2, "No": 0}
-
     return {
         "Publications": score_map[responses["pub"]],
         "Media": score_map[responses["media"]],
