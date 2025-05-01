@@ -59,6 +59,8 @@ def results():
     fig.update_layout(yaxis_title='', xaxis_title='Score (out of 2)', height=500)
     st.plotly_chart(fig)
 
+    st.markdown("---")
+
     st.subheader("Personalized Profile Assessment")
     feedback_map = {
         "Publications": {
@@ -112,9 +114,10 @@ def results():
             0: "Explore ways to monetize or patent your work."
         }
     }
-
     for crit, val in scores.items():
         st.markdown(f"**{crit}**: {feedback_map[crit][val]}")
+
+    st.markdown("---")
 
     st.subheader("Your Personalized Evidence Checklist")
     criteria_map = {
@@ -129,7 +132,6 @@ def results():
         "role": "Critical role documentation (org charts, impact reports)",
         "commercial": "Patents or commercial revenue from your innovations"
     }
-
     missing = [v for k, v in criteria_map.items() if st.session_state.responses.get(k) == "No"]
 
     if missing:
@@ -138,6 +140,8 @@ def results():
             st.markdown(f"- {item}")
     else:
         st.success("🎉 You’ve covered all 10 USCIS criteria. Strong case!")
+
+    st.markdown("---")
 
     st.subheader("Letter & Statement Templates")
     template_type = st.radio("Select a template to view:", [
