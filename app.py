@@ -5,7 +5,6 @@ from scoring import score_eligibility
 
 st.set_page_config(page_title="ImmigrationAnalyzer", layout="centered")
 
-# --- Load custom CSS ---
 def load_css():
     try:
         with open("style.css") as f:
@@ -20,28 +19,25 @@ if "responses" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
 
-# --- Welcome Page ---
 def welcome():
     st.title("ImmigrationAnalyzer")
     st.markdown("#### Evaluate your EB1-A and EB2-NIW eligibility in minutes.")
-    st.markdown("This tool gives you a visual profile and copy-pasteable templates to help build your self-petition case.")
+    st.markdown("This tool gives you a visual profile, custom checklists, and letter templates to support your petition.")
     if st.button("Start Eligibility Assessment"):
         st.session_state.page = "quiz"
 
-# --- Quiz Page ---
 def quiz():
     st.header("Eligibility Assessment")
-
     with st.form("eligibility_form"):
         pub = st.radio("Have you published peer-reviewed articles?", ["Yes", "No"])
         media = st.radio("Have you been featured in media (news, interviews, etc.)?", ["Yes", "No"])
-        judge = st.radio("Have you judged work of others (conferences, panels)?", ["Yes", "No"])
+        judge = st.radio("Have you judged work of others?", ["Yes", "No"])
         salary = st.radio("Do you earn a salary in the top 10% of your field?", ["Yes", "No"])
         contrib = st.radio("Have you made original contributions of major significance?", ["Yes", "No"])
         awards = st.radio("Have you received prestigious national or international awards?", ["Yes", "No"])
         memberships = st.radio("Are you a member of exclusive professional associations?", ["Yes", "No"])
         display = st.radio("Has your work been exhibited or showcased publicly?", ["Yes", "No"])
-        role = st.radio("Do you hold a critical or leading role in a distinguished organization?", ["Yes", "No"])
+        role = st.radio("Do you hold a critical role in a distinguished organization?", ["Yes", "No"])
         commercial = st.radio("Has your work led to significant commercial success or patents?", ["Yes", "No"])
         submitted = st.form_submit_button("Submit")
 
@@ -52,64 +48,106 @@ def quiz():
         }
         st.session_state.page = "results"
 
-# --- Results Page ---
 def results():
     st.header("Your USCIS Criteria Breakdown")
-
     scores = score_eligibility(st.session_state.responses)
-
-    df = pd.DataFrame({
-        'Criterion': list(scores.keys()),
-        'Score': list(scores.values())
-    })
-
+    df = pd.DataFrame({'Criterion': list(scores.keys()), 'Score': list(scores.values())})
     fig = px.bar(
-        df,
-        x='Score',
-        y='Criterion',
-        orientation='h',
-        range_x=[0, 2],
-        color='Score',
-        color_continuous_scale='Blues',
-        title=None
+        df, x='Score', y='Criterion', orientation='h',
+        range_x=[0, 2], color='Score', color_continuous_scale='Blues'
     )
-    fig.update_layout(
-        yaxis_title='',
-        xaxis_title='Score (out of 2)',
-        height=500,
-        margin=dict(l=40, r=30, t=30, b=30)
-    )
+    fig.update_layout(yaxis_title='', xaxis_title='Score (out of 2)', height=500)
     st.plotly_chart(fig)
 
-    st.subheader("Suggested Evidence Checklist")
-    checklist_items = [
-        "✔️ Peer-reviewed publications",
-        "✔️ Media mentions and press coverage",
-        "✔️ Judging experience at conferences or panels",
-        "✔️ Original contributions of major significance",
-        "✔️ High compensation proof (offer letters, salary slips)",
-        "✔️ Awards, grants, or fellowships",
-        "✔️ Memberships in selective professional associations",
-        "✔️ Display of work (exhibits, performances, showcases)",
-        "✔️ Critical role documentation (org charts, impact reports)",
-        "✔️ Patents or commercial revenue from your innovations"
-    ]
-    for item in checklist_items:
-        st.markdown(f"- {item}")
+    st.subheader("Personalized Profile Assessment")
+    feedback_map = {
+        "Publications": {
+            2: "Excellent — your publication record strongly supports your case.",
+            1: "Good — you have some publications, but more top-tier journals could help.",
+            0: "This is a gap — consider publishing in reputable journals."
+        },
+        "Media": {
+            2: "Strong media presence — well done.",
+            1: "Some coverage present — aim for higher-credibility outlets.",
+            0: "Try securing interviews or media features about your work."
+        },
+        "Judging": {
+            2: "Great — judging others’ work shows field recognition.",
+            1: "Consider participating more formally in review panels.",
+            0: "Apply to judge competitions or review proposals to improve this."
+        },
+        "Contributions": {
+            2: "Well-demonstrated original impact — this is a strength.",
+            1: "You have some contributions — emphasize their wider influence.",
+            0: "Document unique results or innovations more clearly."
+        },
+        "Salary": {
+            2: "High compensation is a strong supporting factor.",
+            1: "Could benefit from salary benchmarking or awards.",
+            0: "Try to show income or offers reflecting top-tier standing."
+        },
+        "Memberships": {
+            2: "Prestigious memberships add solid credibility.",
+            1: "Consider joining more selective, invite-only associations.",
+            0: "Look into national or field-specific elite associations."
+        },
+        "Awards": {
+            2: "Major awards strengthen your petition.",
+            1: "Try applying for competitive fellowships or grants.",
+            0: "Lack of awards — seek nominations or contests."
+        },
+        "Display of Work": {
+            2: "Your work has strong visibility — keep it up.",
+            1: "Increase your visibility through talks or showcases.",
+            0: "Consider exhibitions, showcases, or public presentations."
+        },
+        "Critical Role": {
+            2: "Leadership well documented — this supports your case.",
+            1: "Could use clearer documentation of your influence.",
+            0: "Consider showing org charts or testimonials proving your role."
+        },
+        "Commercial Success": {
+            2: "Strong commercial results add major value.",
+            1: "Emphasize more specific metrics or revenue impacts.",
+            0: "Explore ways to monetize or patent your work."
+        }
+    }
 
-    st.subheader("Recommendation Letter & Statement Templates")
+    for crit, val in scores.items():
+        st.markdown(f"**{crit}**: {feedback_map[crit][val]}")
 
-    template_type = st.radio(
-        "Select a template to view:",
-        options=[
-            "Academic Recommender Letter",
-            "Industry Recommender Letter",
-            "EB2-NIW Personal Statement"
-        ]
-    )
+    st.subheader("Your Personalized Evidence Checklist")
+    criteria_map = {
+        "pub": "Peer-reviewed publications",
+        "media": "Media mentions and press coverage",
+        "judge": "Judging experience at conferences or panels",
+        "contrib": "Original contributions of major significance",
+        "salary": "High compensation proof (offer letters, salary slips)",
+        "awards": "Awards, grants, or fellowships",
+        "memberships": "Memberships in selective professional associations",
+        "display": "Display of work (exhibits, performances, showcases)",
+        "role": "Critical role documentation (org charts, impact reports)",
+        "commercial": "Patents or commercial revenue from your innovations"
+    }
+
+    missing = [v for k, v in criteria_map.items() if st.session_state.responses.get(k) == "No"]
+
+    if missing:
+        st.markdown("We recommend gathering evidence for the following:")
+        for item in missing:
+            st.markdown(f"- {item}")
+    else:
+        st.success("🎉 You’ve covered all 10 USCIS criteria. Strong case!")
+
+    st.subheader("Letter & Statement Templates")
+    template_type = st.radio("Select a template to view:", [
+        "Academic Recommender Letter",
+        "Industry Recommender Letter",
+        "EB2-NIW Personal Statement"
+    ])
 
     if template_type == "Academic Recommender Letter":
-        academic_template = """
+        st.code("""
 [Professor's Name]  
 [Department]  
 [University Name]  
@@ -118,19 +156,14 @@ def results():
 
 To Whom It May Concern,
 
-I am pleased to recommend [Candidate’s Full Name] for U.S. permanent residency under the [EB1-A / EB2-NIW] category. I have worked with [him/her/them] in [capacity], during which I observed [his/her/their] impactful contributions to the field of [discipline].
-
-Their work on [describe research or innovation] has not only advanced academic thought but also holds national and global significance. [Candidate] demonstrates rare qualities of scholarly excellence, originality, and persistence that meet the high bar of this immigration category.
-
-I strongly support this petition and am confident in [his/her/their] extraordinary potential.
+I am pleased to recommend [Candidate] for permanent residency under the [EB1-A / EB2-NIW] category. I have observed their significant contributions in [field]. Their work on [project] demonstrates excellence and global relevance.
 
 Sincerely,  
-[Professor’s Name]
-"""
-        st.code(academic_template, language='markdown')
+[Professor's Name]
+        """, language='markdown')
 
     elif template_type == "Industry Recommender Letter":
-        industry_template = """
+        st.code("""
 [Executive's Name]  
 [Title]  
 [Company Name]  
@@ -139,40 +172,29 @@ Sincerely,
 
 To Whom It May Concern,
 
-I am writing to recommend [Candidate’s Name] for a U.S. green card under the [EB1-A / EB2-NIW] category. I have known [him/her/them] in a professional capacity as [his/her/their] [manager/partner/industry peer], and I can attest to the exceptional impact of [his/her/their] work.
-
-[Candidate’s] contributions to [describe product, system, or strategy] have led to significant business outcomes, including [revenue impact, reach, innovation]. Their skills and leadership in [field] are exceptional and stand out even at an international level.
-
-I wholeheartedly endorse this petition.
+I recommend [Candidate] for a green card under the [EB1-A / EB2-NIW] category. Their work on [product/project] has had measurable business impact. I fully support their petition.
 
 Sincerely,  
-[Executive Name]
-"""
-        st.code(industry_template, language='markdown')
+[Executive's Name]
+        """, language='markdown')
 
     elif template_type == "EB2-NIW Personal Statement":
-        personal_statement = """
+        st.code("""
 [Your Name]  
 [Email Address]  
 [Date]
 
 To Whom It May Concern,
 
-I am writing this personal statement in support of my petition for permanent residency under the EB2 National Interest Waiver category. My work in [field/industry] contributes directly to the United States' national goals of [e.g., technological innovation, public health, education reform].
-
-Through projects such as [briefly describe], I have made original contributions that benefit a broad population, address systemic challenges, and foster international collaboration. My intention is to continue this work within the U.S., helping further its leadership in [specific goal].
-
-I respectfully request favorable consideration of my petition and thank you for the opportunity to contribute to this nation.
+I am petitioning under the EB2-NIW category. My work in [field] advances U.S. interests such as [goal]. I’ve led projects like [X] that reflect my impact. I respectfully seek approval to continue this mission from within the U.S.
 
 Sincerely,  
 [Your Name]
-"""
-        st.code(personal_statement, language='markdown')
+        """, language='markdown')
 
     if st.button("Back to Home"):
         st.session_state.page = "welcome"
 
-# --- Page Router ---
 if st.session_state.page == "welcome":
     welcome()
 elif st.session_state.page == "quiz":
