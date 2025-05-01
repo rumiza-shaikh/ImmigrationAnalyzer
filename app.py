@@ -1,5 +1,6 @@
 import streamlit as st
-import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
 from scoring import score_eligibility
 
 st.set_page_config(page_title="ImmigrationAnalyzer", layout="centered")
@@ -23,8 +24,7 @@ if "page" not in st.session_state:
 def welcome():
     st.title("ImmigrationAnalyzer")
     st.markdown("#### Evaluate your EB1-A and EB2-NIW eligibility in minutes.")
-    st.markdown("This tool gives you a radar profile and custom templates to help build your self-petition case.")
-
+    st.markdown("This tool gives you a visual profile and copy-pasteable templates to help build your self-petition case.")
     if st.button("Start Eligibility Assessment"):
         st.session_state.page = "quiz"
 
@@ -43,7 +43,6 @@ def quiz():
         display = st.radio("Has your work been exhibited or showcased publicly?", ["Yes", "No"])
         role = st.radio("Do you hold a critical or leading role in a distinguished organization?", ["Yes", "No"])
         commercial = st.radio("Has your work led to significant commercial success or patents?", ["Yes", "No"])
-
         submitted = st.form_submit_button("Submit")
 
     if submitted:
@@ -55,20 +54,30 @@ def quiz():
 
 # --- Results Page ---
 def results():
-    st.header("Your Eligibility Radar Profile")
+    st.header("Your USCIS Criteria Breakdown")
 
     scores = score_eligibility(st.session_state.responses)
 
-    fig = go.Figure(data=go.Scatterpolar(
-        r=list(scores.values()),
-        theta=list(scores.keys()),
-        fill='toself',
-        line=dict(color='rgb(0,123,255)')
-    ))
+    df = pd.DataFrame({
+        'Criterion': list(scores.keys()),
+        'Score': list(scores.values())
+    })
+
+    fig = px.bar(
+        df,
+        x='Score',
+        y='Criterion',
+        orientation='h',
+        range_x=[0, 2],
+        color='Score',
+        color_continuous_scale='Blues',
+        title=None
+    )
     fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 2])),
-        showlegend=False,
-        margin=dict(t=10, b=10)
+        yaxis_title='',
+        xaxis_title='Score (out of 2)',
+        height=500,
+        margin=dict(l=40, r=30, t=30, b=30)
     )
     st.plotly_chart(fig)
 
