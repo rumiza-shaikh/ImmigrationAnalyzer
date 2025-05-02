@@ -22,7 +22,7 @@ if "page" not in st.session_state:
 def welcome():
     st.title("ImmigrationAnalyzer")
     st.markdown("#### Evaluate your EB1-A and EB2-NIW eligibility in minutes.")
-    st.markdown("This tool gives you a visual profile, custom checklists, and letter templates to support your petition.")
+    st.markdown("This tool gives you a visual profile, personalized checklists, and ready-to-use templates to support your petition.")
     if st.button("Start Eligibility Assessment"):
         st.session_state.page = "quiz"
 
@@ -114,8 +114,13 @@ def results():
             0: "Explore ways to monetize or patent your work."
         }
     }
+
+    color_map = {2: "#2ecc71", 1: "#f1c40f", 0: "#e74c3c"}
+
     for crit, val in scores.items():
-        st.markdown(f"**{crit}**: {feedback_map[crit][val]}")
+        feedback = feedback_map[crit][val]
+        color = color_map[val]
+        st.markdown(f"<span style='color:{color}'><strong>{crit}:</strong> {feedback}</span>", unsafe_allow_html=True)
 
     st.markdown("---")
 
